@@ -22,7 +22,7 @@ logging.basicConfig(
     format='%(asctime)s %(message)s'
 )
 
-def get_bird_observations(api_key,lat=40.939999, lng=-73.826111,notable=True):
+def get_bird_observations(api_key,lat=40.939999, lng=-73.826111,notable=False):
     """
     Fetches bird observations from the eBird API and writes them to a CSV file.
 
