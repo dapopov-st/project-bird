@@ -21,14 +21,14 @@ logging.basicConfig(
     format='%(asctime)s %(message)s'
 )
 
-def get_bird_observations(api_key,lat=41.76814, lng=-74.15532,notable=True):
+def get_bird_observations(api_key,lat=40.939999, lng=-73.826111,notable=True):
     """
     Fetches bird observations from the eBird API and writes them to a CSV file.
 
     Parameters:
     - api_key (str): The API key for accessing the eBird API.
-    - lat (float): Latitude for the location to fetch observations. Default is 41.76814.
-    - lng (float): Longitude for the location to fetch observations. Default is -74.15532.
+    - lat (float): Latitude for the location to fetch observations. Default is 40.939999.
+    - lng (float): Longitude for the location to fetch observations. Default is -73.826111.
     - notable (bool): If True, fetch notable observations. If False, fetch recent observations. Default is True.
     """
     url=(f'https://api.ebird.org/v2/data/obs/geo/recent/notable?lat={lat}&lng={lng}' if notable
