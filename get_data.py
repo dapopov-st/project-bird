@@ -1,6 +1,7 @@
 
 """
 This script fetches bird observation data from the eBird API and logs the results.
+Please upload your API key to the .env file and name it EBIRD_API_TOKEN before running the script.
 """
 
 import requests
