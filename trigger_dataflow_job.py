@@ -1,11 +1,18 @@
+"""
+Triggers a Dataflow job to apply a schema to the CSV data from GCS and load it into BigQuery.
+"""
+
 from googleapiclient.discovery import build
 import google.auth
 
 def trigger_dataflow_job():
-    
-    credentials, project = google.auth.default()
+    """
+    Programatically triggers a Dataflow job to read data from a CSV file n a GCS bucket,
+    apply a schema to the data, and write the data to a BigQuery table using a predefined
+    Dataflow template for GCS to BigQuery loading.
+    """
+    credentials, project = google.auth.default()   #__,'project-bird-430511'
     service = build('dataflow', 'v1b3',credentials=credentials)
-    #'project-bird-430511'
 
     # From Dataflow Console "Job info" get 
     template_path = "gs://dataflow-templates-us-central1/latest/GCS_Text_to_BigQuery"
