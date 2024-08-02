@@ -2,6 +2,7 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 import csv
 import io
+#import argparse
 
 # Define the schema
 schema = [
@@ -40,11 +41,11 @@ def parse_location_string(location_string):
         }
 
 def transform(row):
-    print('calling transform')
+    #print('calling transform')
     obj = {}
 
     for field in schema:
-        print('inside transform 1', obj)
+        #print('inside transform 1', obj)
         obj[field['name']] = row.get(field['name'], '')
 
     # Check if lat and lng are already present
@@ -60,35 +61,6 @@ def transform(row):
             print(f"Error parsing location string: {location_string}")
 
     return obj
-
-
-# class ParseCSVRow(beam.DoFn):
-#     print('calling ParseCSVRow')
-#     def process(self, element):
-#         print('calling process')
-#         #print('Processing element in ParseCSVRow:', element)
-#         reader = csv.DictReader(io.StringIO(element))
-#         for row in reader:
-#             print('Parsed row:', row)
-#             yield row
-
-
-
-# class ParseCSVRow(beam.DoFn):
-#     def __init__(self):
-#         print('calling ParseCSVRow')
-
-#     def process(self, element):
-#         #print('Processing element in ParseCSVRow:', element)
-#         try:
-#             reader = csv.DictReader(io.StringIO(element))
-#             print('rows:', list(reader))
-#             for row in reader:
-#                 print('Parsed row:', row)
-#                 yield row
-#         except Exception as e:
-#             print(f"Error reading CSV element: {element}")
-#             print(f"Exception: {e}")
 
 
 class ParseCSVRow(beam.DoFn):
@@ -117,25 +89,7 @@ class ParseCSVRow(beam.DoFn):
 
 
 
-# class FormatCSVRow(beam.DoFn):
-#     def process(self, element):
-#         output = io.StringIO()
-#         writer = csv.DictWriter(output, fieldnames=[field['name'] for field in schema])
-#         writer.writerow(element)
-#         yield output.getvalue().strip()
 
-# class FormatCSVRow(beam.DoFn):
-#     def __init__(self):
-#         self.header_written = False
-
-#     def process(self, element):
-#         output = io.StringIO()
-#         writer = csv.DictWriter(output, fieldnames=[field['name'] for field in schema])
-#         if not self.header_written:
-#             writer.writeheader()
-#             self.header_written = True
-#         writer.writerow(element)
-#         yield output.getvalue().strip()
 class FormatCSVRow(beam.CombineFn):
     print('calling FormatCSVRow')
     def create_accumulator(self):
@@ -160,34 +114,12 @@ class FormatCSVRow(beam.CombineFn):
         return [output.getvalue().strip()]
     
 
-# def run(argv=None):
-#     pipeline_options = PipelineOptions(argv)
-#     with beam.Pipeline(options=pipeline_options) as p:
-#         (
-#             p
-#             | 'ReadInput' >> beam.io.ReadFromText('recent_observations.csv', skip_header_lines=1)
-#             | 'ParseCSV' >> beam.ParDo(ParseCSVRow())
-#             | 'Transform' >> beam.Map(transform)
-#             | 'FormatCSV' >> beam.CombineGlobally(FormatCSVRow()).without_defaults()
-#             | 'WriteOutput' >> beam.io.WriteToText('output_data', file_name_suffix='.csv', header='speciesCode,comName,sciName,locId,locName,obsDt,howMany,lat,lng,obsValid,obsReviewed,locationPrivate,subId')
-#         )
 
 
 
-# def run(argv=None):
-#     pipeline_options = PipelineOptions(argv)
-#     with beam.Pipeline(options=pipeline_options) as p:
-#         (
-#             p
-#             | 'ReadInput' >> beam.io.ReadFromText('recent_observations.csv', skip_header_lines=1)
-#             | 'ParseCSV' >> beam.ParDo(ParseCSVRow())
-#             | 'Transform' >> beam.Map(transform)
-#             | 'FormatCSV' >> beam.CombineGlobally(FormatCSVRow()).without_defaults()
-#             | 'WriteOutput' >> beam.io.WriteToText('output_data', file_name_suffix='.csv')
-#         )
 
 def run(argv=None):
-    schema = (
+    bq_schema = (
     "speciesCode:STRING, "
     "comName:STRING, "
     "sciName:STRING, "
@@ -206,12 +138,12 @@ def run(argv=None):
     with beam.Pipeline(options=pipeline_options) as p:
         (
             p
-            | 'ReadInput' >> beam.io.ReadFromText('recent_observations.csv', skip_header_lines=1)
+            | 'ReadInput' >> beam.io.ReadFromText('gs://project-bird-bucket/recent_observations.csv', skip_header_lines=1)
             | 'ParseCSV' >> beam.ParDo(ParseCSVRow())
             | 'Transform' >> beam.Map(transform)
             | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
                 'project-bird-430511:project_bird_dataset.project_bird_table',
-                schema=schema,
+                schema=bq_schema,
                 write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
                 create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
                 custom_gcs_temp_location='gs://project-bird-bucket/temp'
