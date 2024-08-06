@@ -25,6 +25,7 @@ from apache_beam.options.pipeline_options import PipelineOptions, GoogleCloudOpt
 import csv
 import io
 import argparse
+import logging
 
 # Define the schema
 schema = [
@@ -114,16 +115,15 @@ class ParseCSVRow(beam.DoFn):
             Processes a CSV element by combining it with a header row, 
             parsing it into a dictionary, and yielding each row.
     """
-    def __init__(self):
+    def __init__(self,header):
         print('calling ParseCSVRow')
+        self.header = header
 
     def process(self, element):
-        #print('Processing element in ParseCSVRow:', element)
+        print('Processing element in ParseCSVRow:', element)
         try:
-            # Define the header row
-            header = HEADER
             # Combine the header and the element
-            csv_data = f"{header}\n{element}"
+            csv_data = f"{self.header}\n{element}"
             
             reader = csv.DictReader(io.StringIO(csv_data))
             rows = list(reader)  # Convert reader to a list to inspect its contents
@@ -140,65 +140,70 @@ class ParseCSVRow(beam.DoFn):
 
 
 
-class FormatCSVRow(beam.CombineFn):
-    """
-    A CombineFn class for formatting rows into a CSV string in an Apache Beam pipeline.
+# class FormatCSVRow(beam.CombineFn):
+#     """
+#     A CombineFn class for formatting rows into a CSV string in an Apache Beam pipeline.
 
-    Methods:
-        create_accumulator():
-            Initializes an empty accumulator list.
+#     Methods:
+#         create_accumulator():
+#             Initializes an empty accumulator list.
 
-        add_input(accumulator, element):
-            Adds an input element to the accumulator.
+#         add_input(accumulator, element):
+#             Adds an input element to the accumulator.
 
-        merge_accumulators(accumulators):
-            Merges multiple accumulators into a single list.
+#         merge_accumulators(accumulators):
+#             Merges multiple accumulators into a single list.
 
-        extract_output(accumulator):
-            Converts the accumulated elements into a CSV formatted string.
-    """
-    print('calling FormatCSVRow')
-    def create_accumulator(self):
-        return []
+#         extract_output(accumulator):
+#             Converts the accumulated elements into a CSV formatted string.
+#     """
+#     print('calling FormatCSVRow')
+#     def create_accumulator(self):
+#         return []
 
-    def add_input(self, accumulator, element):
-        accumulator.append(element)
-        return accumulator
+#     def add_input(self, accumulator, element):
+#         accumulator.append(element)
+#         return accumulator
 
-    def merge_accumulators(self, accumulators):
-        merged = []
-        for accumulator in accumulators:
-            merged.extend(accumulator)
-        return merged
+#     def merge_accumulators(self, accumulators):
+#         merged = []
+#         for accumulator in accumulators:
+#             merged.extend(accumulator)
+#         return merged
 
-    def extract_output(self, accumulator):
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=[field['name'] for field in schema])
-        writer.writeheader()
-        for element in accumulator:
-            writer.writerow(element)
-        return [output.getvalue().strip()]
-    
-class CustomOptions(PipelineOptions):
-    @classmethod
-    def _add_argparse_args(cls, parser):
-        parser.add_argument('--input', dest='input', required=True, help='Input file to process.')
-        parser.add_argument('--output', dest='output', required=True, help='Output BigQuery table to write results to.')
-        parser.add_argument('--temp_location', dest='temp_location', required=True, help='GCS location for temporary files.')
-        parser.add_argument('--project', dest='project', required=True, help='GCP project ID.')
-        parser.add_argument('--job_name', dest='job_name', required=True, help='Dataflow job name.')
-        parser.add_argument('--staging_location', dest='staging_location', required=True, help='GCS staging location.')
-        parser.add_argument('--region', dest='region', required=True, help='GCP region.')
+#     def extract_output(self, accumulator):
+#         output = io.StringIO()
+#         writer = csv.DictWriter(output, fieldnames=[field['name'] for field in schema])
+#         writer.writeheader()
+#         for element in accumulator:
+#             writer.writerow(element)
+#         return [output.getvalue().strip()]
+        #return output.getvalue().strip()
+# class FormatCSVRow(beam.DoFn):
+#     def process(self, element):
+#         try:
+#             formatted_row = ','.join([str(element[field]) for field in element])
+#             yield formatted_row
+#         except Exception as e:
+#             logging.error(f"Error formatting row: {element}, error: {e}")
+
+class FormatCSVRow(beam.DoFn):
+    def process(self, element):
+        #values = element.split(',')
+        #row = dict(zip(HEADER, element))
+        yield element
+# class CustomOptions(PipelineOptions):
+#     @classmethod
+#     def _add_argparse_args(cls, parser):
+#         parser.add_argument('--input', dest='input', required=True, help='Input file to process.')
+#         parser.add_argument('--output', dest='output', required=True, help='Output BigQuery table to write results to.')
+#         parser.add_argument('--temp_location', dest='temp_location', required=True, help='GCS location for temporary files.')
+#         parser.add_argument('--project', dest='project', required=True, help='GCP project ID.')
+#         parser.add_argument('--job_name', dest='job_name', required=True, help='Dataflow job name.')
+#         parser.add_argument('--staging_location', dest='staging_location', required=True, help='GCS staging location.')
+#         parser.add_argument('--region', dest='region', required=True, help='GCP region.')
 
 def run(argv=None):
-    """
-    Runs the Apache Beam pipeline to process CSV data and write the results to BigQuery.
-
-    Args:
-        argv (list, optional): List of command-line arguments.
-    Returns:
-        None
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', dest='input', required=True, help='Input file to process.')
     parser.add_argument('--output', dest='output', required=True, help='Output BigQuery table to write results to.')
@@ -209,50 +214,126 @@ def run(argv=None):
     parser.add_argument('--region', dest='region', required=True, help='GCP region.')
     known_args, pipeline_args = parser.parse_known_args(argv)
 
-
     pipeline_options = PipelineOptions(pipeline_args)
-    custom_options = pipeline_options.view_as(CustomOptions)
-
+    #custom_options = pipeline_options.view_as(CustomOptions)
     google_cloud_options = pipeline_options.view_as(GoogleCloudOptions)
     google_cloud_options.project = known_args.project
     google_cloud_options.job_name = known_args.job_name
     google_cloud_options.staging_location = known_args.staging_location
     google_cloud_options.temp_location = known_args.temp_location
-    pipeline_options.view_as(StandardOptions).runner = 'DataflowRunner'
+    google_cloud_options.region = known_args.region
+    #pipeline_options.view_as(StandardOptions).runner = 'DataflowRunner'
+    pipeline_options.view_as(StandardOptions).runner = 'DirectRunner'
 
-    bq_schema = (
-    "speciesCode:STRING, "
-    "comName:STRING, "
-    "sciName:STRING, "
-    "locId:STRING, "
-    "locName:STRING, "
-    "obsDt:STRING, "
-    "howMany:STRING, "
-    "lat:STRING, "
-    "lng:STRING, "
-    "obsValid:STRING, "
-    "obsReviewed:STRING, "
-    "locationPrivate:STRING, "
-    "subId:STRING"
-    )
-    pipeline_options = PipelineOptions(argv)
+    # bq_schema = (
+    #     "speciesCode:STRING, "
+    #     "comName:STRING, "
+    #     "sciName:STRING, "
+    #     "locId:STRING, "
+    #     "locName:STRING, "
+    #     "obsDt:STRING, "
+    #     "howMany:STRING, "
+    #     "lat:STRING, "
+    #     "lng:STRING, "
+    #     "obsValid:STRING, "
+    #     "obsReviewed:STRING, "
+    #     "locationPrivate:STRING, "
+    #     "subId:STRING"
+    # )
+    import json
+    bq_schema_ = [
+        {"name": "speciesCode", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "comName", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "sciName", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "locId", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "locName", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "obsDt", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "howMany", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "lat", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "lng", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "obsValid", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "obsReviewed", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "locationPrivate", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "subId", "type": "STRING", "mode": "REQUIRED"}
+    ]
+    bq_schema = json.dumps(bq_schema_)
+
+    ##############################
     with beam.Pipeline(options=pipeline_options) as p:
         (
             p
             | 'ReadInput' >> beam.io.ReadFromText(known_args.input, skip_header_lines=1)
-            | 'ParseCSV' >> beam.ParDo(ParseCSVRow())
+            | 'ParseCSV' >> beam.ParDo(ParseCSVRow(header=HEADER))
             | 'Transform' >> beam.Map(transform)
-            | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
-                known_args.output,
-                schema=bq_schema,
-                write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
-                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
-                custom_gcs_temp_location=known_args.temp_location
-            )
-        )
+            | 'FormatCSV' >> beam.ParDo(FormatCSVRow())
+            #| 'WriteOutput' >> beam.io.WriteToText('output_data', file_name_suffix='.csv')
 
+             | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
+                'project_bird_dataset.project_bird_table',
+                schema='speciesCode:STRING, comName:STRING, sciName:STRING, locId:STRING, locName:STRING, obsDt:TIMESTAMP, howMany:INTEGER, lat:FLOAT, lng:FLOAT, obsValid:BOOLEAN, obsReviewed:BOOLEAN, locationPrivate:BOOLEAN, subId:STRING',
+                #schema=bq_schema,
+                write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
+            )
+                     #   | 'WriteOutput' >> beam.io.WriteToText('output_data', file_name_suffix='.csv')
+
+            #            | 'FormatCSV' >> beam.CombineGlobally(FormatCSVRow()).without_defaults()
+
+            # | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
+            #     known_args.output,
+            #     schema=bq_schema,
+            #     write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
+            #     create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+            #     custom_gcs_temp_location=google_cloud_options.temp_location,
+            #    # with_errors = True
+            # )
+        )
+        #           # | 'FormatCSV' >> beam.ParDo(FormatCSVRow())
+
+        ##############################
+
+    # with beam.Pipeline(options=pipeline_options) as p:
+    #     formatted_rows = (
+    #         p
+    #         | 'ReadInput' >> beam.io.ReadFromText(known_args.input, skip_header_lines=1)
+    #         | 'ParseCSV' >> beam.ParDo(ParseCSVRow(header=HEADER))
+    #         | 'Transform' >> beam.Map(transform)
+    #         | 'FormatCSV' >> beam.ParDo(FormatCSVRow())
+    #     )
+
+    #     # Write formatted rows to a CSV file in Google Cloud Storage
+    #     formatted_rows | 'WriteToGCS' >> beam.io.WriteToText('gs://project-bird-bucket/formatted_output', file_name_suffix='.csv', header=','.join(HEADER))
+
+    #     # Read the CSV file from Google Cloud Storage and write to BigQuery
+    #     (
+    #         p
+    #         | 'ReadFormattedCSV' >> beam.io.ReadFromText('gs://project-bird-bucket/formatted_output-00000-of-00001.csv', skip_header_lines=1)
+    #         | 'ParseFormattedCSV' >> beam.ParDo(ParseCSVRow(header=HEADER))
+    #         | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
+    #             known_args.output,
+    #             schema=bq_schema,
+    #             write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
+    #             create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+    #             custom_gcs_temp_location=google_cloud_options.temp_location,
+    #         )
+    #     )
+    ##############################
+
+def run_local(argv=None):
+    pipeline_options = PipelineOptions(argv)
+    with beam.Pipeline(options=pipeline_options) as p:
+        (
+            p
+            | 'ReadInput' >> beam.io.ReadFromText('gs://project-bird-bucket/recent_observations.csv', skip_header_lines=1)
+            | 'ParseCSV' >> beam.ParDo(ParseCSVRow(HEADER))
+            | 'Transform' >> beam.Map(transform)
+            | 'FormatCSV' >> beam.CombineGlobally(FormatCSVRow()).without_defaults()
+            | 'WriteOutput' >> beam.io.WriteToText('output_data', file_name_suffix='.csv')
+        )
 # Careful!  Below is good for testing, will interfere with Dataflow job ran with Cloud Function
-if __name__ == '__main__':
-    print('running')
-    run()
-    print('done')
+# if __name__ == '__main__':
+#     print('running')
+#run_local()
+#     #run()
+#     print('done')
+run()
