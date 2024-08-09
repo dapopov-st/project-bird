@@ -6,9 +6,9 @@ Please upload your API key to the .env file and name it EBIRD_API_TOKEN before r
 
 import requests
 import csv
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import os
-load_dotenv()
+#load_dotenv() #set environment variable in Composer
 api_key = os.getenv("EBIRD_API_TOKEN")
 from google.cloud import storage
 
@@ -62,14 +62,14 @@ def get_bird_observations(api_key,lat=40.939999, lng=-73.826111,notable=False):
         
 
 
-if __name__ == '__main__':
-    lat, lng = 40.939999, -73.826111
-    csv_filename = get_bird_observations(api_key,lat,lng,notable=False)
-    if csv_filename is None: print('No data to upload'); exit()
+#if __name__ == '__main__':
+lat, lng = 40.939999, -73.826111
+csv_filename = get_bird_observations(api_key,lat,lng,notable=False)
+if csv_filename is None: print('No data to upload'); exit()
 
-    bucket_name = 'project-bird-bucket'
-    storage_client = storage.Client()
-    storage_bucket = storage_client.bucket(bucket_name)
-    blob = storage_bucket.blob(f'{csv_filename}')
-    blob.upload_from_filename(csv_filename)
+bucket_name = 'project-bird-bucket'
+storage_client = storage.Client()
+storage_bucket = storage_client.bucket(bucket_name)
+blob = storage_bucket.blob(f'{csv_filename}')
+blob.upload_from_filename(csv_filename)
 

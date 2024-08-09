@@ -15,6 +15,7 @@ default_args = {
     }
 
 dag = DAG(
+    'get_and_push_bird_observations',
     default_args=default_args,
     description='A simple DAG to get and push bird observations',
     schedule_interval=timedelta(days=3),
@@ -24,7 +25,7 @@ dag = DAG(
 with dag:
     get_bird_observations = BashOperator(
         task_id='get_and_push_bird_observations',
-        bash_command='python3 get_data_and_push.py',
+        bash_command='python3 /home/airflow/gcs/dags/scripts/get_data_and_push.py',
     )
 
  

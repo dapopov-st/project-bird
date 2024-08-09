@@ -1,0 +1,7 @@
+google-api-python-client==2.138.0
+apache-beam==2.57.0
+google-apitools==0.5.31
+google-cloud-core==2.4.1
+google-cloud-storage==2.16.0
+functions-framework
+build
