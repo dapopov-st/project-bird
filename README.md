@@ -1,5 +1,5 @@
 # Project Bird on GCP (In Progress)
-GCP ETL project to pull data from eBird API 2.0 and display a map of recent bird observations using GCP toolkit
+GCP ETL project to pull data from eBird API 2.0 and display a map of recent bird observations using GCP
 
 ## Goals for this project
 - Step 1: Schedule an Airflow job to pull data from eBird API 2.0 and store it in Cloud Storage -> Done
