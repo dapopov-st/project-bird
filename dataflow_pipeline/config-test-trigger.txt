@@ -1,0 +1,14 @@
+{
+  "data": {
+    "name": "recent_observations.csv",
+    "bucket": "project-bird-bucket",
+    "contentType": "text/csv",
+    "metageneration": "1",
+    "timeCreated": "2020-04-23T07:38:57.230Z",
+    "updated": "2020-04-23T07:38:57.230Z"
+  },
+  "type": "google.cloud.storage.object.v1.finalized",
+  "specversion": "1.0",
+  "source": "//storage.googleapis.com/projects/_/buckets/project-bird-bucket",
+  "id": "1234567890"
+}

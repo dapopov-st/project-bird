@@ -222,7 +222,7 @@ def run_pipeline(argv=None):
     google_cloud_options.staging_location = known_args.staging_location
     google_cloud_options.temp_location = known_args.temp_location
     google_cloud_options.region = known_args.region
-    pipeline_options.view_as(StandardOptions)._pipelinener = 'DataflowRunner'
+    pipeline_options.view_as(StandardOptions).runner = 'DataflowRunner'
     #pipeline_options.view_as(StandardOptions).runner = 'DirectRunner'
 
    

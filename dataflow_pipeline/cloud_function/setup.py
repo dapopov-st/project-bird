@@ -14,5 +14,4 @@ setuptools.setup(
         "google-cloud-storage==2.18.0",
         "apache-beam==2.57.0",
     ],
-    packages=setuptools.find_packages(),
  )
