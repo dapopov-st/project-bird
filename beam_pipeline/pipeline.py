@@ -203,7 +203,7 @@ class FormatCSVRow(beam.DoFn):
 #         parser.add_argument('--staging_location', dest='staging_location', required=True, help='GCS staging location.')
 #         parser.add_argument('--region', dest='region', required=True, help='GCP region.')
 
-def run(argv=None):
+def run_pipeline(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', dest='input', required=True, help='Input file to process.')
     parser.add_argument('--output', dest='output', required=True, help='Output BigQuery table to write results to.')
@@ -222,41 +222,11 @@ def run(argv=None):
     google_cloud_options.staging_location = known_args.staging_location
     google_cloud_options.temp_location = known_args.temp_location
     google_cloud_options.region = known_args.region
-    #pipeline_options.view_as(StandardOptions).runner = 'DataflowRunner'
-    pipeline_options.view_as(StandardOptions).runner = 'DirectRunner'
+    pipeline_options.view_as(StandardOptions)._pipelinener = 'DataflowRunner'
+    #pipeline_options.view_as(StandardOptions).runner = 'DirectRunner'
 
-    # bq_schema = (
-    #     "speciesCode:STRING, "
-    #     "comName:STRING, "
-    #     "sciName:STRING, "
-    #     "locId:STRING, "
-    #     "locName:STRING, "
-    #     "obsDt:STRING, "
-    #     "howMany:STRING, "
-    #     "lat:STRING, "
-    #     "lng:STRING, "
-    #     "obsValid:STRING, "
-    #     "obsReviewed:STRING, "
-    #     "locationPrivate:STRING, "
-    #     "subId:STRING"
-    # )
-    import json
-    bq_schema_ = [
-        {"name": "speciesCode", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "comName", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "sciName", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "locId", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "locName", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "obsDt", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "howMany", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "lat", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "lng", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "obsValid", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "obsReviewed", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "locationPrivate", "type": "STRING", "mode": "NULLABLE"},
-        {"name": "subId", "type": "STRING", "mode": "REQUIRED"}
-    ]
-    bq_schema = json.dumps(bq_schema_)
+   
+
 
     ##############################
     with beam.Pipeline(options=pipeline_options) as p:
@@ -336,4 +306,4 @@ def run_local(argv=None):
 #run_local()
 #     #run()
 #     print('done')
-run()
+#run_pipeline()
