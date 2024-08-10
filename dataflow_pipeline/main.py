@@ -18,8 +18,8 @@ def trigger_dataflow(cloud_event):
     print('input_file: ',input_file)
     #input_file = 'gs://project-bird-bucket/recent_observations.csv'
     output_table = 'project-bird-430511:project_bird_dataset.project_bird_table'
-    temp_location = 'gs://project-bird-bucket/temp'
-    staging_location = 'gs://project-bird-bucket/staging'
+    temp_location = 'gs://project-bird-meta/temp'
+    staging_location = 'gs://project-bird-meta/staging'
     job_name = 'project-bird-430511-dataflow-job'
     project = 'project-bird-430511'
     region = 'us-east5'
