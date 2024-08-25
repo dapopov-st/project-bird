@@ -1,0 +1,8 @@
+-- select * from `dsongcp-407314.project_bird_viz.project_bird_table`;
+UPDATE `dsongcp-407314.project_bird_viz.project_bird_table`
+SET geography = ST_GEOGPOINT(lng, lat)
+where 1=1;
+
+select * from `dsongcp-407314.project_bird_viz.project_bird_table`
+WHERE
+    ST_DWithin(geography, ST_GEOGPOINT(-73.968285, 40.785091), 10000); 
